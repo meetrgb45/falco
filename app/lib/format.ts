@@ -37,7 +37,8 @@ export function formatUsdc(amount: bigint | number | string | null | undefined):
 
 export function formatDateTime(ts: number | null | undefined): string {
   if (!ts) return "—";
-  return new Date(ts * 1000).toLocaleString(undefined, { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+  const d = new Date(ts * 1000);
+  return d.toLocaleString("en-US", { timeZone: "UTC", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }) + " UTC";
 }
 
 export function relativeTime(iso: string | null | undefined): string {
