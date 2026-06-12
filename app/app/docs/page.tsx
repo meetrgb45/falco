@@ -179,13 +179,13 @@ if (a.policy.allowedMarketsRoot != bytes32(0) &&
           <P>All three Falco agents are registered on the ERC-8004 Identity Registry on Celo Sepolia (<Code>0x8004A818BFB912233c491871b3d84c89A494BD9e</Code>). View them on 8004scan:</P>
           <div className="mt-3 flex flex-col gap-2 font-mono text-xs">
             {[
-              { role: "MarketOps", addr: "0xe5c945033aF41703a88DeEaE91B6b850296332DF" },
-              { role: "Trader",    addr: "0x00C817A0858451390cC99881Cd87Df1EDd2e3cdF" },
-              { role: "Risk-LP",   addr: "0xbeb9DF3E69e54376dCBADed74764168faB498Fdd" },
-            ].map(({ role, addr }) => (
+              { role: "MarketOps", addr: "0x3Ba01A7992ecB412709F945D633577f116E85250", scan: "https://testnet.8004scan.io/agents/celo-sepolia/331" },
+              { role: "Trader",    addr: "0x00C817A0858451390cC99881Cd87Df1EDd2e3cdF", scan: "https://testnet.8004scan.io/agents/celo-sepolia/332" },
+              { role: "Risk-LP",   addr: "0xbeb9DF3E69e54376dCBADed74764168faB498Fdd", scan: "https://testnet.8004scan.io/agents/celo-sepolia/333" },
+            ].map(({ role, addr, scan }) => (
               <div key={addr} className="flex items-center gap-3">
                 <span className="w-20 text-muted-foreground">{role}</span>
-                <a href={`https://testnet.8004scan.io/agent/${addr}`} target="_blank" className="text-primary underline-offset-4 hover:underline">{addr}</a>
+                <a href={scan} target="_blank" className="text-primary underline-offset-4 hover:underline">{addr}</a>
               </div>
             ))}
           </div>

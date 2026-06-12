@@ -10,6 +10,7 @@ export function TopNav() {
           <span className="text-xl font-medium">falco</span>
         </Link>
         <nav className="hidden items-center gap-5 text-sm text-muted-foreground sm:flex">
+          <Link href="/stats"   className="transition-colors hover:text-foreground">Stats</Link>
           <Link href="/markets" className="transition-colors hover:text-foreground">Markets</Link>
           <Link href="/agents"  className="transition-colors hover:text-foreground">Agents</Link>
           <Link href="/docs"    className="transition-colors hover:text-foreground">API</Link>

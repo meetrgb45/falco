@@ -5,7 +5,7 @@ import { BtcLiveChart } from "./BtcLiveChart";
 import { MarketCountdown } from "./MarketCountdown";
 import { useLiveBtcPrice } from "./useLiveBtcPrice";
 import { formatPrice, STRIKE_SCALE } from "@/lib/format";
-import type { Market } from "@/lib/chain";
+import type { MarketRow } from "@/lib/db/queries";
 
 function dateRangeLabel(openTs: number, closeTs: number) {
   const o = new Date(openTs * 1000);
@@ -14,14 +14,17 @@ function dateRangeLabel(openTs: number, closeTs: number) {
   return `${o.toLocaleString(undefined, { month: "long", day: "numeric" })}, ${fmt(o)}–${fmt(c)}`;
 }
 
-interface Props { initialMarket: Market | null; recentCloses: Market[] }
+interface Props {
+  initialMarket: MarketRow | null;
+  recentCloses:  { market_id: number; winner: string }[];
+}
 
 export function LiveMarketCard({ initialMarket, recentCloses }: Props) {
   const market = initialMarket;
   const { price, history } = useLiveBtcPrice();
 
-  const strikeUsd = market && market.strike > 0n
-    ? Number(market.strike) / STRIKE_SCALE
+  const strikeUsd = market?.strike_price
+    ? Number(market.strike_price) / STRIKE_SCALE
     : null;
   const delta = price != null && strikeUsd != null ? price - strikeUsd : null;
 
@@ -36,18 +39,18 @@ export function LiveMarketCard({ initialMarket, recentCloses }: Props) {
             <h2 className="font-display text-xl font-semibold tracking-tight">Bitcoin Up or Down</h2>
             <p className="text-sm text-muted-foreground" suppressHydrationWarning>
               {market
-                ? <>Market #{market.id} · {dateRangeLabel(market.openTs, market.closeTs)}</>
+                ? <>Market #{market.market_id} · {dateRangeLabel(market.open_ts!, market.close_ts!)}</>
                 : "Waiting for the next window…"}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <MarketCountdown closeTs={market?.closeTs ?? null} />
+          <MarketCountdown closeTs={market?.close_ts ?? null} />
           <div className="flex gap-1">
             {recentCloses.slice(-8).map((m) => (
-              <span key={m.id} className={`inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-semibold ${m.winner === 1 ? "bg-up/20 text-up" : "bg-down/20 text-down"}`}>
-                {m.winner === 1 ? "↑" : "↓"}
+              <span key={m.market_id} className={`inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-semibold ${m.winner === "yes" ? "bg-up/20 text-up" : "bg-down/20 text-down"}`}>
+                {m.winner === "yes" ? "↑" : "↓"}
               </span>
             ))}
           </div>

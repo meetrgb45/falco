@@ -1,29 +1,31 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/components/markets/StatusBadge";
-import { fetchAllMarkets } from "@/lib/chain";
+import { fetchAllMarkets } from "@/lib/db/queries";
 import { formatStrike, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_FILTERS = [
-  { key: "all", label: "All" },
-  { key: "0",   label: "Pending" },
-  { key: "1",   label: "Open" },
-  { key: "2",   label: "Halted" },
-  { key: "3",   label: "Closed" },
+  { key: "all",     label: "All" },
+  { key: "pending", label: "Pending" },
+  { key: "open",    label: "Open" },
+  { key: "halted",  label: "Halted" },
+  { key: "closed",  label: "Closed" },
 ];
 
-const WinnerLabel = ["—", "YES ↑", "NO ↓"];
+const STATUS_COLOR: Record<string, string> = {
+  open:    "text-emerald-500",
+  halted:  "text-yellow-500",
+  closed:  "text-zinc-400",
+  pending: "text-zinc-500",
+};
 
 interface Props { searchParams: Promise<{ status?: string }> }
 
 export default async function MarketsPage({ searchParams }: Props) {
   const { status } = await searchParams;
-  const all    = await fetchAllMarkets().catch(() => []);
-  const filter = status && status !== "all" ? Number(status) : undefined;
-  const markets = filter !== undefined ? all.filter((m) => m.status === filter) : all;
-  const sorted  = [...markets].reverse();
+  const filter  = status && status !== "all" ? status : undefined;
+  const markets = await fetchAllMarkets({ status: filter, limit: 200 }).catch(() => []);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
@@ -47,33 +49,32 @@ export default async function MarketsPage({ searchParams }: Props) {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>{sorted.length} market{sorted.length !== 1 ? "s" : ""}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{markets.length} market{markets.length !== 1 ? "s" : ""}</CardTitle></CardHeader>
         <CardContent>
-          {sorted.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No markets yet.</p>
+          {markets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No markets yet for this filter.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-                    {["ID","Status","Open","Close","Strike","Winner","YES Rsv","NO Rsv"].map((h) => (
+                    {["ID","Status","Open","Close","Strike","Final","Winner"].map((h) => (
                       <th key={h} className="px-2 py-2 font-medium">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {sorted.map((m) => (
-                    <tr key={m.id} className="transition-colors hover:bg-muted/40">
-                      <td className="px-2 py-2 font-mono font-medium">#{m.id}</td>
-                      <td className="px-2 py-2"><StatusBadge status={m.status} /></td>
-                      <td className="px-2 py-2 font-mono text-xs">{formatDateTime(m.openTs)}</td>
-                      <td className="px-2 py-2 font-mono text-xs">{formatDateTime(m.closeTs)}</td>
-                      <td className="px-2 py-2 font-mono text-xs">{formatStrike(m.strike)}</td>
-                      <td className={`px-2 py-2 font-mono text-xs ${m.winner === 1 ? "text-up" : m.winner === 2 ? "text-down" : "text-muted-foreground"}`}>
-                        {WinnerLabel[m.winner]}
+                  {markets.map((m) => (
+                    <tr key={m.market_id} className="transition-colors hover:bg-muted/40">
+                      <td className="px-2 py-2 font-mono font-medium">#{m.market_id}</td>
+                      <td className={`px-2 py-2 font-medium capitalize ${STATUS_COLOR[m.status ?? ""] ?? ""}`}>{m.status}</td>
+                      <td className="px-2 py-2 font-mono text-xs">{formatDateTime(m.open_ts ?? undefined)}</td>
+                      <td className="px-2 py-2 font-mono text-xs">{formatDateTime(m.close_ts ?? undefined)}</td>
+                      <td className="px-2 py-2 font-mono text-xs">{formatStrike(m.strike_price ?? undefined)}</td>
+                      <td className="px-2 py-2 font-mono text-xs">{formatStrike(m.close_price ?? undefined)}</td>
+                      <td className={`px-2 py-2 font-medium ${m.winner === "yes" ? "text-up" : m.winner === "no" ? "text-down" : "text-muted-foreground"}`}>
+                        {m.winner === "yes" ? "YES ↑" : m.winner === "no" ? "NO ↓" : "—"}
                       </td>
-                      <td className="px-2 py-2 font-mono text-xs">${(Number(m.yesReserve)/1e6).toFixed(2)}</td>
-                      <td className="px-2 py-2 font-mono text-xs">${(Number(m.noReserve)/1e6).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
